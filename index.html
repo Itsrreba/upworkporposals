@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upwork Proposal Generator</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-block">
+        <span class="brand-mark" aria-hidden="true">P</span>
+        <div>
+          <h1>Proposal Generator</h1>
+          <span>Short Upwork proposals that get replies</span>
+        </div>
+      </div>
+      <nav class="tabs" aria-label="Main tabs">
+        <button class="tab-button active" data-tab="generator" type="button">Generator</button>
+        <button class="tab-button" data-tab="tracker" type="button">Tracker</button>
+        <button class="tab-button" data-tab="learning" type="button">Learning</button>
+      </nav>
+    </header>
+
+    <main class="app-shell">
+      <section id="generator" class="tab-panel active" aria-labelledby="generator-title">
+        <div class="hero-panel section-heading compact-heading">
+          <div>
+            <p class="eyebrow">Proposal studio</p>
+            <h2 id="generator-title">Turn a job post into a proposal you can send with confidence.</h2>
+            <p class="section-subtitle">Paste the client brief, choose the angle, review the draft, then save only the version you would actually send.</p>
+            <div class="value-strip" aria-label="Proposal rules">
+              <span>Short by default</span>
+              <span>Portfolio included</span>
+              <span>Always asks a real question</span>
+            </div>
+          </div>
+          <button id="saveProposal" class="primary-action" type="button">Save accepted draft</button>
+        </div>
+
+        <div class="generator-grid">
+          <form class="input-panel" id="proposalForm">
+            <div class="panel-heading">
+              <div>
+                <p class="step-label">Step 1</p>
+                <h3>Brief</h3>
+              </div>
+              <span>Client, project, and source text</span>
+            </div>
+
+            <div class="form-section">
+              <div class="field-row">
+                <label>
+                  Client name
+                  <input id="clientName" type="text" placeholder="Alex" autocomplete="off" />
+                </label>
+                <label>
+                  Internal project label
+                  <input id="projectTitle" type="text" placeholder="Automation lead, website build, AI workflow..." autocomplete="off" />
+                </label>
+              </div>
+
+              <label for="jobText">Job post text</label>
+              <textarea id="jobText" rows="9" placeholder="Paste the Upwork job post here..."></textarea>
+            </div>
+
+            <div class="panel-heading secondary-heading">
+              <div>
+                <p class="step-label">Step 2</p>
+                <h3>Strategy</h3>
+              </div>
+              <span>Control the shape of the draft</span>
+            </div>
+
+            <div class="field-row">
+              <label>
+                Tone
+                <select id="tone">
+                  <option value="direct">Direct</option>
+                  <option value="warm">Warm</option>
+                  <option value="expert">Expert</option>
+                  <option value="curious">Curious</option>
+                </select>
+              </label>
+              <label>
+                Style
+                <select id="length">
+                  <option value="short">Short and direct</option>
+                  <option value="medium">Short with plan</option>
+                  <option value="detailed">Short with proof</option>
+                </select>
+              </label>
+            </div>
+
+            <details class="context-drawer" open>
+              <summary>Portfolio, profile, and extra context</summary>
+              <label for="portfolioLink">Portfolio link</label>
+              <input id="portfolioLink" type="url" placeholder="https://your-portfolio.com" autocomplete="off" />
+
+              <label for="profileSummary">Key points about you</label>
+              <textarea id="profileSummary" rows="4" placeholder="Example: 10 years of web design/development. WordPress, Webflow, automation, fast communication, clean design."></textarea>
+
+              <label for="extraContext">Extra context</label>
+              <textarea id="extraContext" rows="4" placeholder="Relevant wins, timeline, budget notes, or a specific angle you want to use."></textarea>
+            </details>
+
+            <div class="action-row">
+              <button class="primary-action" type="submit">Generate proposal</button>
+              <button id="regenerateProposal" type="button">Another version</button>
+            </div>
+          </form>
+
+          <section class="output-panel" aria-label="Generated proposal">
+            <div class="proposal-toolbar">
+              <div>
+                <p class="eyebrow">Draft desk</p>
+                <h3>Review before sending</h3>
+              </div>
+              <div class="toolbar-actions">
+                <span id="draftVersionLabel" class="draft-version">No draft yet</span>
+                <button id="clearDraft" type="button">Clear</button>
+                <button id="copyProposal" type="button">Copy</button>
+              </div>
+            </div>
+
+            <div class="draft-metrics">
+              <div>
+                <strong id="proposalScore">0</strong>
+                <span>Draft score</span>
+              </div>
+              <div>
+                <strong id="wordCount">0</strong>
+                <span>Words</span>
+              </div>
+              <div>
+                <strong id="questionCount">0</strong>
+                <span>Questions</span>
+              </div>
+            </div>
+
+            <textarea id="proposalOutput" rows="22" readonly placeholder="Your short, client-focused proposal will appear here."></textarea>
+            <div class="analysis-strip" id="analysisStrip"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="tracker" class="tab-panel" aria-labelledby="tracker-title">
+        <div class="section-heading compact-heading">
+          <div>
+            <p class="eyebrow">Pipeline</p>
+            <h2 id="tracker-title">Track replies and follow up without losing context.</h2>
+            <p class="section-subtitle">Every saved draft becomes a signal for what works.</p>
+          </div>
+          <button id="exportData" type="button">Export JSON</button>
+        </div>
+
+        <div class="tracker-summary" id="trackerSummary"></div>
+
+        <div class="tracker-controls">
+          <input id="trackerSearch" type="search" placeholder="Search client, project, approach, or notes" />
+          <select id="trackerFilter" aria-label="Filter proposals">
+            <option value="all">All statuses</option>
+            <option value="sent">Sent</option>
+            <option value="responded">Responded</option>
+            <option value="no-response">No response</option>
+            <option value="won">Won</option>
+            <option value="lost">Lost</option>
+          </select>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Project</th>
+                <th>Approach</th>
+                <th>Status</th>
+                <th>Sent</th>
+                <th>Notes</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="trackerRows"></tbody>
+          </table>
+        </div>
+
+        <section class="follow-up-panel" aria-label="Follow-up draft">
+          <div class="panel-heading">
+            <h3>Follow-up draft</h3>
+            <span>Generated from the proposal you choose in the tracker.</span>
+          </div>
+          <textarea id="followUpOutput" rows="7" readonly placeholder="Use a Follow up button from the tracker to draft a short follow-up message."></textarea>
+          <button id="copyFollowUp" type="button">Copy follow-up</button>
+        </section>
+      </section>
+
+      <section id="learning" class="tab-panel" aria-labelledby="learning-title">
+        <div class="section-heading compact-heading">
+          <div>
+            <p class="eyebrow">Improve</p>
+            <h2 id="learning-title">See which proposal angles are getting traction.</h2>
+            <p class="section-subtitle">Mark outcomes in the tracker and the recommendations become more useful.</p>
+          </div>
+        </div>
+        <div class="learning-grid" id="learningGrid"></div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
