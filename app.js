@@ -236,6 +236,10 @@ function extractKeywords(text) {
     "database",
     "crm",
     "email",
+    "ads",
+    "facebook",
+    "instagram",
+    "creative",
     "design",
     "figma",
     "react",
@@ -247,16 +251,19 @@ function extractKeywords(text) {
 }
 
 function inferCategory(text) {
+  if (/virtual assistant|admin support|data entry|calendar|inbox|administrative/.test(text)) return "admin support";
+  if (/meta ads|facebook ads|instagram ads|static ads|social ads|ad creative|ads creative|paid social|image ads|banner ads/.test(text)) return "ad creative";
   if (/automation|zapier|make|workflow|integrat/.test(text)) return "automation";
   if (/\bai\b|chatgpt|openai|llm|bot/.test(text)) return "AI workflow";
   if (/dashboard|report|analytics|spreadsheet|sheet/.test(text)) return "dashboard";
-  if (/wordpress|wp admin|template|templates|content creator|content editor|photographs|photos|upload|cloud server|logon|login credentials|editing on/.test(text)) return "WordPress editing";
+  if (/wordpress|wp admin|wp-admin|content creator|content editor|cloud server|logon|login credentials|editing on|wordpress template|wordpress templates/.test(text)) return "WordPress editing";
   if (/website|landing|wordpress|shopify|webflow|venture|brand|company/.test(text)) return "web build";
   if (/scrap|extract|data|database/.test(text)) return "data work";
   return "custom solution";
 }
 
 function inferPainPoint(text) {
+  if (/meta ads|facebook ads|instagram ads|static ads|social ads|ad creative|paid social|image ads/.test(text)) return "the ads need to look clear, on-brand, and strong enough to stop the scroll";
   if (/wordpress|template|templates|photographs|photos|upload|content|editing/.test(text)) return "the site needs clean content updates without breaking the existing WordPress layout";
   if (/manual|time|repetitive|copy|paste/.test(text)) return "manual work is slowing the business down";
   if (/bug|fix|broken|error|issue/.test(text)) return "something important is not working reliably";
@@ -268,6 +275,16 @@ function inferPainPoint(text) {
 function inferProjectQuestion(text, category, context) {
   const contextQuestion = inferContextQuestion(text, context);
   if (contextQuestion) return contextQuestion;
+
+  if (category === "ad creative") {
+    if (/copy|text|headline|hook/.test(text)) {
+      return "Do you already have the ad copy/headlines finalized, or should I help shape the creative around the strongest hook?";
+    }
+    if (/photo|photos|image|images|product/.test(text)) {
+      return "Do you already have the product photos selected, or should I choose the strongest ones for the first ad concepts?";
+    }
+    return "Are these ads meant more for testing new angles or scaling a direction that is already working?";
+  }
 
   if (category === "WordPress editing") {
     if (/photographs|photos|images|text|content/.test(text)) {
@@ -303,6 +320,9 @@ function inferProjectQuestion(text, category, context) {
 }
 
 function inferContextQuestion(text, context) {
+  if (context.hasAssets && /meta ads|facebook ads|instagram ads|static ads|social ads|ad creative|paid social|image ads|product photos/.test(text)) {
+    return "Are the product photos and ad copy already finalized, or should I help choose the strongest creative direction for the first versions?";
+  }
   if (context.hasManualWork && /automation|zapier|make|workflow|integrat|spreadsheet|sheet/.test(text)) {
     return "Which manual step should disappear first so the automation saves time right away?";
   }
@@ -337,6 +357,7 @@ function inferContextQuestion(text, context) {
 }
 
 function inferReplyStrategy(text, category, urgency) {
+  if (category === "ad creative") return "creative-performance reply";
   if (category === "WordPress editing" && /ongoing|long[- ]?term|all works out/.test(text)) return "ongoing support reply";
   if (category === "WordPress editing") return "practical editing reply";
   if (urgency === "fast delivery") return "speed-first reply";
@@ -349,6 +370,8 @@ function inferReplyStrategy(text, category, urgency) {
 }
 
 function inferClientSignal(text, category, urgency) {
+  if (category === "admin support") return "I can help keep the admin work organized, accurate, and easy for you to hand off.";
+  if (category === "ad creative") return "I can create clean static ad concepts that match the product and give you usable variations to test.";
   if (category === "WordPress editing") return "I can handle the WordPress edits cleanly, work from the photos/text you provide, and keep the existing templates intact.";
   if (urgency === "fast delivery") return "I can move quickly, but I would still keep the first version controlled so speed does not turn into rework.";
   if (/example|portfolio|past work|similar|experience|expert/.test(text)) return "Since you are likely comparing people by relevant experience, I would keep the proposal practical and point you straight to examples.";
@@ -360,6 +383,9 @@ function inferClientSignal(text, category, urgency) {
 }
 
 function inferClientObservation(text, category, context = {}) {
+  if (category === "ad creative") {
+    return "For static ads, the creative needs to communicate the offer quickly and look polished enough to earn attention in the feed.";
+  }
   if (context.hasProvidedMaterials && context.hasAccess) {
     return "Since the materials and access will be provided, I would focus on clean execution, careful formatting, and quick review cycles.";
   }
@@ -397,6 +423,12 @@ function inferClientObservation(text, category, context = {}) {
 }
 
 function inferDeliverable(text, category) {
+  if (category === "admin support") {
+    return "organized admin support that keeps the details accurate and reduces the amount of follow-up needed from you";
+  }
+  if (category === "ad creative") {
+    return "a small set of polished static ad creatives that are clear, on-brand, and ready to test";
+  }
   if (category === "WordPress editing") {
     if (/2 pages|two pages/.test(text)) {
       return "two WordPress template pages updated with the provided photos and text, keeping the layout clean and consistent";
@@ -425,6 +457,12 @@ function inferDeliverable(text, category) {
 }
 
 function inferClientPromise(text, category, urgency) {
+  if (category === "admin support") {
+    return "I would keep the workflow clear, communicate early, and make sure the details are handled consistently.";
+  }
+  if (category === "ad creative") {
+    return "I would keep the first batch focused on strong visual hierarchy, clean formatting, and a few angles you can compare.";
+  }
   if (category === "WordPress editing" && /ongoing|long[- ]?term|all works out/.test(text)) {
     return "I would keep the first round organized and easy to review, and I am happy to continue helping with ongoing updates if it is a good fit.";
   }
@@ -480,7 +518,7 @@ function buildProofLine(profile, category) {
 
   const lower = cleanProfile.toLowerCase();
   const experience = extractExperiencePhrase(lower);
-  const skills = extractSkillPhrase(lower, category);
+  const skills = extractSkillPhrase(cleanProfile);
   const strength = extractStrengthPhrase(lower);
 
   if (experience && skills && strength) {
@@ -494,6 +532,9 @@ function buildProofLine(profile, category) {
   }
   if (skills && strength) {
     return `My background is in ${skills}, with a focus on ${strength}.`;
+  }
+  if (skills) {
+    return `My background is in ${skills}, so I can bring relevant experience into this project.`;
   }
   if (experience) {
     return `${experience} and can bring that experience into this project.`;
@@ -514,26 +555,122 @@ function extractExperiencePhrase(text) {
   return "";
 }
 
-function extractSkillPhrase(text, category) {
+function extractSkillPhrase(profile) {
+  const text = profile.toLowerCase();
   const skills = [];
-  if (/web design|design/.test(text)) skills.push("web design");
-  if (/web development|development|developer|coding|frontend|front-end/.test(text)) skills.push("web development");
-  if (/wordpress/.test(text)) skills.push("WordPress");
-  if (/webflow/.test(text)) skills.push("Webflow");
-  if (/shopify/.test(text)) skills.push("Shopify");
-  if (/automation|zapier|make/.test(text)) skills.push("automation");
-  if (skills.length) return joinList([...new Set(skills)]);
+  const knownSkills = [
+    ["video editing", /video edit|video editor|premiere|after effects|davinci|reels|short-form|short form|youtube video/],
+    ["motion graphics", /motion graphics|animation|animated/],
+    ["graphic design", /graphic design|graphic designer|visual design|brand design|branding|logo|creative design/],
+    ["Meta static ads", /meta ads|facebook ads|instagram ads|static ads|social ads|ad creative|ads creative|paid social/],
+    ["copywriting", /copywriting|copywriter|email copy|sales copy|landing page copy/],
+    ["SEO", /\bseo\b|search engine optimization|keyword research/],
+    ["data engineering", /data engineer|data engineering|etl|pipeline|data pipeline|warehouse|bigquery|snowflake|airflow|dbt/],
+    ["data analysis", /data analyst|data analysis|analytics|power bi|tableau|looker|excel|spreadsheet|sql/],
+    ["machine learning", /machine learning|ml engineer|data science|data scientist|model training|predictive/],
+    ["backend development", /backend|back-end|api development|server-side|server side|node\.?js|django|laravel/],
+    ["frontend development", /frontend|front-end|react|vue|angular|next\.?js/],
+    ["web design", /web design|website design|ui design|ux design/],
+    ["web development", /web development|website development|web developer|coding/],
+    ["WordPress", /wordpress|wp admin|elementor|woocommerce/],
+    ["Webflow", /webflow/],
+    ["Shopify", /shopify/],
+    ["automation", /automation|zapier|make\.com|integromat|workflow automation/],
+    ["virtual assistance", /virtual assistant|admin support|data entry|calendar|inbox/],
+    ["project management", /project manager|project management|scrum|agile|operations/],
+    ["customer support", /customer support|customer service|helpdesk|support specialist/],
+    ["3D design", /3d design|3d artist|blender|cinema 4d|rendering/],
+    ["CAD design", /\bcad\b|autocad|solidworks|product design/],
+    ["translation", /translator|translation|localization|bilingual/],
+    ["writing", /content writing|writer|blog writing|article writing/],
+    ["social media management", /social media manager|social media management|instagram management|content calendar/],
+  ];
 
-  const fallback = {
-    "web build": "web design and development",
-    "WordPress editing": "WordPress content updates and page formatting",
-    automation: "workflow automation",
-    "AI workflow": "AI-assisted workflows",
-    dashboard: "dashboard and data presentation",
-    "data work": "structured data workflows",
-    "custom solution": "practical digital projects",
-  };
-  return fallback[category] || fallback["custom solution"];
+  knownSkills.forEach(([label, pattern]) => {
+    if (pattern.test(text)) skills.push(label);
+  });
+
+  const rolePhrases = extractRolePhrases(profile);
+  rolePhrases.forEach((role) => {
+    if (!skillOverlaps(skills, role)) skills.push(role);
+  });
+
+  if (!skills.length && /\bdesign(er)?\b/.test(text)) skills.push("design");
+  if (!skills.length && /\bdeveloper|development\b/.test(text)) skills.push("development");
+  if (!skills.length && /\bmarketing|marketer\b/.test(text)) skills.push("marketing");
+  if (!skills.length && /\bads?\b|advertising|creative/.test(text)) skills.push("ad creative");
+
+  return joinList(dedupeSkills(skills).slice(0, 4));
+}
+
+function extractRolePhrases(profile) {
+  const cleaned = profile
+    .replace(/[.!?]/g, ",")
+    .replace(/\s+/g, " ")
+    .trim();
+  const phrases = [];
+  const patterns = [
+    /\b(?:i am|i'm|im|as)\s+(?:a|an)?\s*([^,;]+?)(?:\s+(?:with|for|who)\b|,|$)/gi,
+    /\b(?:i do|i work in|i specialize in|i focus on|expert in|specialist in|experience in|experienced in|background in)\s+([^,;]+?)(?:,|$)/gi,
+  ];
+
+  patterns.forEach((pattern) => {
+    let match = pattern.exec(cleaned);
+    while (match) {
+      const phrase = cleanRolePhrase(match[1]);
+      if (phrase) phrases.push(phrase);
+      match = pattern.exec(cleaned);
+    }
+  });
+
+  return phrases;
+}
+
+function cleanRolePhrase(phrase) {
+  const cleaned = phrase
+    .replace(/\b(for the past|past|over|around|about)\b.*$/i, "")
+    .replace(/\b(\d{1,2}\+?\s*(years?|yrs?)|decade|ten years?)\b/gi, "")
+    .replace(/\b(expert|specialist|professional)\b$/i, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^and\s+/i, "");
+
+  if (!cleaned || cleaned.length < 3 || cleaned.length > 70) return "";
+  if (/^(this|that|it|all of that|stuff)$/i.test(cleaned)) return "";
+  return normalizeSkillLabel(cleaned.toLowerCase());
+}
+
+function normalizeSkillLabel(skill) {
+  const normalized = skill.trim();
+  const map = [
+    [/^video editor$/, "video editing"],
+    [/^data engineer$/, "data engineering"],
+    [/^data analyst$/, "data analysis"],
+    [/^graphic designer$/, "graphic design"],
+    [/^virtual assistant$/, "virtual assistance"],
+    [/^project manager$/, "project management"],
+    [/^customer support specialist$/, "customer support"],
+  ];
+  const match = map.find(([pattern]) => pattern.test(normalized));
+  return match ? match[1] : normalized;
+}
+
+function skillOverlaps(skills, role) {
+  const normalizedRole = role.toLowerCase();
+  return skills.some((skill) => {
+    const normalizedSkill = skill.toLowerCase();
+    return normalizedSkill.includes(normalizedRole) || normalizedRole.includes(normalizedSkill);
+  });
+}
+
+function dedupeSkills(skills) {
+  const seen = new Set();
+  return skills.filter((skill) => {
+    const key = skill.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function extractStrengthPhrase(text) {
@@ -549,10 +686,10 @@ function extractStrengthPhrase(text) {
 function polishProfileNote(profile, category) {
   const compact = profile
     .replace(/\s+/g, " ")
-    .replace(/^i\s+(do|am|have|work)/i, "My background includes")
+    .replace(/^i\s+(do|am|have|work\s+in|work)/i, "My background includes")
     .trim();
   if (compact.length > 150) {
-    return `${getDefaultProofLine(category)} I can also bring the relevant experience from my background into this project.`;
+    return "I can bring the relevant experience from my background into this project without overcomplicating the first version.";
   }
   return compact.endsWith(".") ? compact : `${compact}.`;
 }
@@ -618,6 +755,8 @@ function getDefaultProofLine(category) {
   const proofLines = {
     "web build": "I build clean, modern web experiences that make the offer easy to understand and simple to act on.",
     "WordPress editing": "I am comfortable working inside WordPress templates, adding content, formatting pages, and keeping updates clean.",
+    "ad creative": "I create clean static ad creatives that make the offer clear and easy to understand quickly.",
+    "admin support": "I handle admin work with a focus on organization, accuracy, and clear communication.",
     automation: "I build practical automations that remove manual work without making the process harder to maintain.",
     "AI workflow": "I build AI workflows around real examples, clear output rules, and practical day-to-day use.",
     dashboard: "I build dashboards that make the important numbers easy to scan and the data easy to trust.",
@@ -640,6 +779,9 @@ function getReplyClose(analysis) {
   }
   if (analysis.replyStrategy === "practical editing reply") {
     return "I can start by reviewing the two pages and organizing the first round of edits clearly.";
+  }
+  if (analysis.replyStrategy === "creative-performance reply") {
+    return "I can start with a few clean creative directions so you can quickly see what feels strongest.";
   }
   if (analysis.replyStrategy === "speed-first reply") {
     return "I can start with the highest-impact piece first and keep the delivery tight.";
@@ -667,6 +809,9 @@ function getHook(tone, analysis) {
 }
 
 function getOpeningLine(analysis) {
+  if (analysis.category === "ad creative") {
+    return "I can help create clean static ad designs that make the offer easy to understand and give you strong variations to test.";
+  }
   if (analysis.category === "WordPress editing") {
     return "I can help with the WordPress edits and keep the process simple: add the provided content, format it cleanly, and make sure the two pages look consistent.";
   }

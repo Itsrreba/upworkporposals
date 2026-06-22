@@ -17,7 +17,7 @@ A lightweight browser app for writing short, human Upwork proposals.
 
 The proposal should never ask abstract questions that make the client do strategy work unless the post clearly asks for strategy. It should ask practical questions connected to the brief, such as whether assets are organized, whether access is ready, what should be edited first, or what ongoing support they expect.
 
-The "Key points about you" field should be treated as raw material. For example, a rough note like "I do web design/web development for the past 10 years" should become a polished proof point such as "I bring 10 years of experience in web design and web development."
+The "Key points about you" field should be treated as raw material and must override category defaults. For example, a rough note like "I do web design/web development for the past 10 years" should become a polished proof point such as "I bring 10 years of experience in web design and web development." This must work for any persona, not only web/design profiles. If the user writes that they are a video editor, data engineer, virtual assistant, copywriter, ads expert, designer, developer, or any other specialist, the proposal should use that actual background instead of forcing a default category.
 
 ## How to use locally
 
