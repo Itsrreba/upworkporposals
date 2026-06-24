@@ -213,41 +213,42 @@ function analyzeClientContext(text) {
     hasUnclearScope: /not sure|unsure|need advice|recommend|help me decide|open to|flexible/.test(text),
     hasProvidedMaterials: /i will provide|we will provide|provided|attached|ready|necessary to upload/.test(text),
     hasManualWork: /manual|copy|paste|repetitive|form submission|form submissions|spreadsheet|sheet|workflow/.test(text),
+    hasAudience: /audience|users|customers|clients|visitors|buyers|leads|patients|members|students/.test(text),
+    hasPlatform: /facebook|instagram|tiktok|youtube|linkedin|wordpress|shopify|webflow|zapier|make|airtable|notion|hubspot|salesforce/.test(text),
   };
 }
 
 function extractKeywords(text) {
   const candidates = [
-    "automation",
-    "ai",
-    "chatgpt",
-    "dashboard",
-    "website",
-    "wordpress",
-    "content",
-    "photos",
-    "templates",
-    "cloud",
-    "shopify",
-    "api",
-    "zapier",
-    "make",
-    "scraping",
-    "database",
-    "crm",
-    "email",
-    "ads",
-    "facebook",
-    "instagram",
-    "creative",
-    "design",
-    "figma",
-    "react",
-    "node",
-    "python",
-    "extension",
+    ["automation", /\bautomation\b/],
+    ["AI", /\bai\b|chatgpt|openai|llm/],
+    ["dashboard", /\bdashboard\b/],
+    ["website", /\bwebsite\b|\bsite\b/],
+    ["wordpress", /\bwordpress\b|wp-admin|wp admin/],
+    ["content", /\bcontent\b|\bcopy\b/],
+    ["photos", /\bphotos?\b|\bimages?\b|\bphotographs?\b/],
+    ["templates", /\btemplates?\b/],
+    ["cloud", /\bcloud\b/],
+    ["shopify", /\bshopify\b/],
+    ["api", /\bapi\b/],
+    ["zapier", /\bzapier\b/],
+    ["make", /\bmake(?:\\.com)?\b/],
+    ["scraping", /\bscrap(?:e|ing)?\b/],
+    ["database", /\bdatabase\b/],
+    ["crm", /\bcrm\b/],
+    ["email", /\bemail\b/],
+    ["ads", /\bads?\b|advertising/],
+    ["facebook", /\bfacebook\b/],
+    ["instagram", /\binstagram\b/],
+    ["creative", /\bcreative\b/],
+    ["design", /\bdesign\b|\bdesigner\b/],
+    ["figma", /\bfigma\b/],
+    ["react", /\breact\b/],
+    ["node", /\bnode(?:\\.js)?\b/],
+    ["python", /\bpython\b/],
+    ["extension", /\bextension\b/],
   ];
-  return candidates.filter((word) => text.includes(word)).slice(0, 5);
+  return candidates.filter(([, pattern]) => pattern.test(text)).map(([label]) => label).slice(0, 5);
 }
 
 function inferCategory(text) {
@@ -305,18 +306,15 @@ function inferProjectQuestion(text, category, context) {
     return "Do you have a few examples of outputs you would actually send, so I can tune the result around that standard?";
   }
   if (/dashboard|report|analytics|spreadsheet|sheet/.test(text)) {
-    return "Which number or status should be impossible to miss when someone opens the dashboard?";
+    return "Which metrics or statuses should be included in the first version?";
   }
   if (/website|landing|wordpress|shopify|webflow|venture|brand|company/.test(text)) {
-    return "What should a visitor understand or do within the first few seconds of landing on the site?";
+    return "Do you already have the content and branding ready, or should I help shape the page structure too?";
   }
   if (/scrap|extract|data|database/.test(text)) {
     return "Where should the cleaned data live once it is ready to use?";
   }
-  if (category === "custom solution") {
-    return "What would make you feel the first version is ready to use?";
-  }
-  return "What would make you feel the first version is ready to use?";
+  return "";
 }
 
 function inferContextQuestion(text, context) {
@@ -328,6 +326,9 @@ function inferContextQuestion(text, context) {
   }
   if (context.hasAssets && context.hasPageScope) {
     return "Do you already have the content and images grouped by page, or would you like me to organize placement as I work through the edits?";
+  }
+  if (context.hasAssets && /website|landing|brand|company|shopify|webflow/.test(text)) {
+    return "Do you already have the main content and branding ready, or should I help shape the page structure too?";
   }
   if (context.hasAssets) {
     return "Are the images/text already finalized, or should I also help with light formatting and placement where needed?";
@@ -343,6 +344,12 @@ function inferContextQuestion(text, context) {
   }
   if (context.hasExamples) {
     return "Do you have one or two examples you want the result to feel close to?";
+  }
+  if (context.hasAudience && /website|landing|brand|ads|creative|email|copy/.test(text)) {
+    return "Who is the main audience this needs to speak to?";
+  }
+  if (context.hasPlatform && /ads|creative|video|content|campaign/.test(text)) {
+    return "Which platform should the first version be optimized for?";
   }
   if (context.hasCurrentSetup) {
     return "Is there anything in the current setup you want preserved exactly as it is?";
@@ -379,7 +386,7 @@ function inferClientSignal(text, category, urgency) {
   if (/bug|fix|broken|error|issue/.test(text)) return "Since something needs fixing, I would first reproduce the issue and confirm the smallest reliable solution.";
   if (/manual|time|repetitive|copy|paste|process/.test(text)) return "The main opportunity seems to be removing repeated manual work without making the process harder to manage.";
   if (category === "AI workflow") return "For AI work, I would focus on output quality first: useful results, clear format, and easy review.";
-  return "I would keep the work focused on the outcome first, then make the build decisions around that.";
+  return "I would focus on making the first version useful, clean, and easy for you to review.";
 }
 
 function inferClientObservation(text, category, context = {}) {
@@ -795,7 +802,7 @@ function getReplyClose(analysis) {
   if (analysis.replyStrategy === "fix-first reply") {
     return "If you can share the current setup or example issue, I can tell you the fastest reliable fix path.";
   }
-  return "If this sounds close, I can send a quick outline of the first version.";
+  return "If this sounds close, I can send a quick first-step outline.";
 }
 
 function getHook(tone, analysis) {
@@ -810,37 +817,79 @@ function getHook(tone, analysis) {
 
 function getOpeningLine(analysis) {
   if (analysis.category === "ad creative") {
-    return "I can help create clean static ad designs that make the offer easy to understand and give you strong variations to test.";
+    return "I can help turn this into clean ad creative that is easy to understand, on-brand, and useful for testing.";
   }
   if (analysis.category === "WordPress editing") {
     return "I can help with the WordPress edits and keep the process simple: add the provided content, format it cleanly, and make sure the two pages look consistent.";
   }
   if (analysis.category === "web build" && analysis.urgency === "fast delivery") {
-    return "I can help get this launched quickly while keeping the first impression polished, clear, and credible.";
+    return "I can help get this launched quickly without making it feel rushed or unfinished.";
   }
   if (analysis.category === "web build") {
-    return "I can help turn this into a polished website that explains the idea clearly and makes the next step obvious.";
+    return "I can help turn this into a clean, credible website that explains the offer clearly.";
   }
   if (analysis.category === "automation" && analysis.urgency === "fast delivery") {
     return "I can move quickly on this while keeping the automation clean enough to trust after launch.";
   }
   if (analysis.category === "AI workflow") {
-    return "I can help build this so the output feels specific and usable, not like generic generated text.";
+    return "I can help make the AI output feel specific, useful, and ready to review instead of generic.";
   }
-  return `I can help with this. ${analysis.clientSignal}`;
+  return "I can help turn this into a clean first version you can review without making the project heavier than it needs to be.";
+}
+
+function getCreativeAngle(analysis) {
+  const angles = {
+    "ad creative": "I would focus on the first few seconds: clear hook, clean hierarchy, and a visual direction that makes the product easy to understand.",
+    "web build": "I would keep the first version focused on credibility, clarity, and making the next step obvious.",
+    automation: "I would map the manual step first, then build the smallest reliable workflow that saves time immediately.",
+    "AI workflow": "I would work from real examples so the output has the right tone, format, and level of detail.",
+    dashboard: "I would make the most important information impossible to miss, then keep the rest organized around it.",
+    "data work": "I would keep the data flow clean: collect it, structure it, and deliver it somewhere useful.",
+    "admin support": "I would keep the handoff simple, the details organized, and the communication clear.",
+    "custom solution": "I would keep the first version narrow, useful, and easy to judge before adding more.",
+  };
+  return angles[analysis.category] || angles["custom solution"];
+}
+
+function getCredibilityLine(analysis) {
+  const lines = {
+    "ad creative": "I would keep the first batch sharp enough to test, with each version showing a clear reason to exist.",
+    "web build": "I would make the first version easy to review: clear message, clean layout, and no unnecessary clutter.",
+    automation: "I would make the workflow easy to trust, so it saves time without becoming another thing to manage.",
+    "AI workflow": "I would tune the output around real examples, because generic AI text usually creates more editing work.",
+    dashboard: "I would make the first version useful at a glance, then refine the details once the data is connected.",
+    "data work": "I would keep the output clean enough that you can actually use it without another cleanup pass.",
+    "admin support": "I would keep the details organized so you do not have to chase small updates or corrections.",
+    "custom solution": "I would keep the scope clear, communicate what I am doing, and avoid making assumptions where the brief is still open.",
+  };
+  return lines[analysis.category] || lines["custom solution"];
+}
+
+function getActionLine(analysis) {
+  const lines = {
+    "ad creative": "My first move would be to create a few distinct directions, not tiny variations of the same ad, so you have something real to compare.",
+    "web build": "My first move would be to shape the page around what the visitor needs to understand, then make the design feel polished and direct.",
+    automation: "My first move would be to document the current step, build the cleanest working flow, and test it with real examples.",
+    "AI workflow": "My first move would be to define what a good output looks like, then tune the workflow until the drafts feel usable.",
+    dashboard: "My first move would be to decide the top-level view first, then connect the supporting data around it.",
+    "data work": "My first move would be to confirm the source, clean structure, and final destination before building the repeatable part.",
+    "admin support": "My first move would be to get the handoff organized so the work is accurate from the start.",
+    "custom solution": "My first move would be to turn the brief into a simple first version that proves the direction before adding complexity.",
+  };
+  return lines[analysis.category] || lines["custom solution"];
 }
 
 function getVariant(version) {
   const variants = [
     {
       name: "Confident concise",
-      shortSections: 7,
+      shortSections: 8,
       mediumSections: 8,
       compose: (data) => [
         data.greeting,
         getHook(data.tone, data.analysis),
-        `What I would aim to deliver is ${data.analysis.deliverable}.`,
-        data.analysis.promise,
+        getActionLine(data.analysis),
+        getCredibilityLine(data.analysis),
         data.profileLine,
         data.portfolioLine,
         data.question,
@@ -850,12 +899,13 @@ function getVariant(version) {
     },
     {
       name: "Client pain",
-      shortSections: 7,
+      shortSections: 8,
       mediumSections: 8,
       compose: (data) => [
         data.greeting,
         data.analysis.observation,
-        `I would keep the first pass practical: define the main path, build that cleanly, and make sure the result is something you can review without guessing what is happening.`,
+        getActionLine(data.analysis),
+        "I would keep the first pass practical enough to review, but polished enough that you can judge the direction properly.",
         data.analysis.promise,
         data.profileLine,
         data.portfolioLine,
@@ -866,13 +916,13 @@ function getVariant(version) {
     },
     {
       name: "Proof first",
-      shortSections: 7,
+      shortSections: 8,
       mediumSections: 8,
       compose: (data) => [
         data.greeting,
-        `I work best on practical builds where the final result needs to be clear, usable, and easy for the client to review.`,
-        `Based on the brief, I would focus on ${data.analysis.deliverable}.`,
-        data.analysis.promise,
+        "This is the kind of work where small details matter because they shape whether the final result feels trustworthy.",
+        getActionLine(data.analysis),
+        getCredibilityLine(data.analysis),
         data.profileLine,
         data.portfolioLine,
         data.question,
@@ -882,12 +932,12 @@ function getVariant(version) {
     },
     {
       name: "Fast execution",
-      shortSections: 7,
+      shortSections: 8,
       mediumSections: 8,
       compose: (data) => [
         data.greeting,
-        `I can move quickly here, but I would not treat speed as an excuse to make the work messy.`,
-        `The best path is to get the important piece working first, make it easy for you to review, then polish the details that actually affect the result.`,
+        "I can move quickly here, but I would not treat speed as an excuse to make the work messy.",
+        getActionLine(data.analysis),
         data.analysis.promise,
         data.profileLine,
         data.portfolioLine,
@@ -898,13 +948,13 @@ function getVariant(version) {
     },
     {
       name: "Strategic",
-      shortSections: 7,
+      shortSections: 8,
       mediumSections: 8,
       compose: (data) => [
         data.greeting,
-        `Before jumping into execution, I would make sure the first version solves the right problem.`,
-        `My recommendation would be to keep the first milestone narrow, useful, and easy to judge, then expand only after the direction is clear.`,
-        `That usually leads to a better result than trying to build every possible feature at once.`,
+        "Before jumping into execution, I would make sure the first version solves the right problem.",
+        getActionLine(data.analysis),
+        "That usually leads to a better result than trying to build every possible feature at once.",
         data.profileLine,
         data.portfolioLine,
         data.question,
@@ -946,9 +996,10 @@ function calculateProposalScore(text) {
   let score = 35;
   const words = text.trim().split(/\s+/).length;
   if (words >= 70 && words <= 150) score += 25;
-  if (/\?/.test(text)) score += 20;
+  if (/\?/.test(text)) score += 15;
   if (/https?:\/\/|Portfolio:/i.test(text)) score += 20;
-  if (/first version|core workflow|real examples|focused first milestone/i.test(text)) score += 10;
+  if (/first version|core workflow|real examples|first pass|highest-impact|ready to review|easy to review/i.test(text)) score += 10;
+  if (!/\?/.test(text) && /If this sounds close|I can start|I can send/i.test(text)) score += 8;
   if (words > 190) score -= 20;
   if (words < 45) score -= 8;
   return Math.max(0, Math.min(100, score));

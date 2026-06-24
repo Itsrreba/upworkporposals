@@ -7,7 +7,7 @@ A lightweight browser app for writing short, human Upwork proposals.
 - Generates concise Upwork proposals from a pasted job post.
 - Always includes your saved portfolio link when provided.
 - Analyzes what the client already mentioned, such as photos, text, access, hosting, examples, deadline, scope, or ongoing work.
-- Adds a low-friction question based on those exact details so the proposal feels personal and easy to answer.
+- Adds a low-friction question only when there is a useful one based on the exact details in the job post.
 - Rewrites your rough key points into polished proof lines instead of copying them word-for-word.
 - Infers the best reply angle from the job post, such as urgent, proof-first, consultative, or fix-first.
 - Tracks sent proposals and client responses.
@@ -15,7 +15,9 @@ A lightweight browser app for writing short, human Upwork proposals.
 
 ## Proposal logic
 
-The proposal should never ask abstract questions that make the client do strategy work unless the post clearly asks for strategy. It should ask practical questions connected to the brief, such as whether assets are organized, whether access is ready, what should be edited first, or what ongoing support they expect.
+The proposal should never ask abstract questions that make the client do strategy work unless the post clearly asks for strategy. It should ask practical questions connected to the brief, such as whether assets are organized, whether access is ready, what should be edited first, or what ongoing support they expect. If the app cannot infer a useful question from the post, it should skip the question instead of forcing a weird one.
+
+The proposal should sound like a thoughtful freelancer replying to the actual post, not a copied job title or a generic AI template. It should use the client details as context, then write a clean, confident answer around the likely outcome, first step, proof, portfolio, and next action.
 
 The "Key points about you" field should be treated as raw material and must override category defaults. For example, a rough note like "I do web design/web development for the past 10 years" should become a polished proof point such as "I bring 10 years of experience in web design and web development." This must work for any persona, not only web/design profiles. If the user writes that they are a video editor, data engineer, virtual assistant, copywriter, ads expert, designer, developer, or any other specialist, the proposal should use that actual background instead of forcing a default category.
 
